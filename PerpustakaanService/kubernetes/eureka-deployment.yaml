@@ -1,0 +1,35 @@
+# kubernetes/eureka-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eureka-deployment
+  namespace: perpustakaan-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eureka-server
+  template:
+    metadata:
+      labels:
+        app: eureka-server
+    spec:
+      containers:
+        - name: eureka-container
+          image: nauvalalpenperdana/eureka-perpustakaan-service:1.0 # Nama image Docker Anda
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8761
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka-server # Service DNS akan bernama 'eureka-server'
+  namespace: perpustakaan-ns
+spec:
+  selector:
+    app: eureka-server
+  ports:
+    - protocol: TCP
+      port: 8761
+      targetPort: 8761

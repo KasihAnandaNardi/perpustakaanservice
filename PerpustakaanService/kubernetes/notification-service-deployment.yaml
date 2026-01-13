@@ -1,0 +1,53 @@
+# kubernetes/notification-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-deployment
+  namespace: perpustakaan-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-container
+          image: nauvalalpenperdana/notification-service:1.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9005 # Port internal aplikasi
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://eureka-server:8761/eureka/"
+            - name: SPRING_RABBITMQ_HOST
+              value: "rabbitmq"
+            # Konfigurasi Email
+            - name: SPRING_MAIL_USERNAME
+              value: "kasihanandanardi@gmail.com" # Ganti dengan email Anda
+            # Ambil password dari Secret
+            - name: SPRING_MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mail-secret
+                  key: gmail-password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service # Service DNS akan bernama 'notification-service'
+  namespace: perpustakaan-ns
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "9005" # Port yang diekspos oleh service ini
+spec:
+  selector:
+    app: notification-service
+  ports:
+    - protocol: TCP
+      port: 9005
+      targetPort: 9005

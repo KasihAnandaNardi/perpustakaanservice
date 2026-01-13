@@ -1,0 +1,46 @@
+# kubernetes/peminjaman-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: peminjaman-command-deployment # Nama unik untuk deployment ini
+  namespace: perpustakaan-ns
+spec:
+  replicas: 1 # Kita mulai dengan 1 replika
+  selector:
+    matchLabels:
+      app: peminjaman-command # Selector harus cocok dengan label di template
+  template:
+    metadata:
+      labels:
+        app: peminjaman-command # Label untuk Pod ini
+    spec:
+      containers:
+        - name: peminjaman-command-container
+          image: nauvalalpenperdana/peminjaman-service:1.0 # Nama image Docker Anda
+          imagePullPolicy: Always # Penting: Gunakan image lokal jika ada
+          ports:
+            - containerPort: 9003 # Port internal aplikasi
+          env:
+            # --- Konfigurasi untuk lingkungan Kubernetes ---
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://eureka-server:8761/eureka/" # Menunjuk ke Service Eureka
+            - name: SPRING_RABBITMQ_HOST
+              value: "rabbitmq" # Menunjuk ke Service RabbitMQ
+            # Anda perlu menambahkan env lain jika dibutuhkan, misal koneksi DB, mail, dll.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: peminjaman-service # Service DNS akan bernama 'peminjaman-service'
+  namespace: perpustakaan-ns
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "9003" # Port yang diekspos oleh service ini
+spec:
+  selector:
+    app: peminjaman-command # Selector harus cocok dengan label Pod
+  ports:
+    - protocol: TCP
+      port: 9003 # Port yang akan diakses oleh service lain
+      targetPort: 9003

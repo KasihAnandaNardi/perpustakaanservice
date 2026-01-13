@@ -1,0 +1,53 @@
+# kubernetes/monitoring/mongodb-exporter.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-exporter-deployment
+  namespace: monitoring-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb-exporter
+  template:
+    metadata:
+      labels:
+        app: mongodb-exporter
+    spec:
+      containers:
+        - name: mongodb-exporter
+          # --- PERUBAHAN UTAMA: MENGGUNAKAN IMAGE YANG BERBEDA ---
+          image: bitnami/mongodb-exporter:latest
+          ports:
+            - name: metrics
+              containerPort: 9216
+          env:
+            # Cara konfigurasi image Bitnami
+            - name: MONGODB_URI
+              value: "mongodb://mongodb.perpustakaan-ns.svc.cluster.local:27017/admin"
+            - name: MONGODB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: monitoring-mongodb-secret
+                  key: mongo-root-username
+            - name: MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: monitoring-mongodb-secret
+                  key: mongo-root-password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-exporter-service
+  namespace: monitoring-ns
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9216"
+spec:
+  selector:
+    app: mongodb-exporter
+  ports:
+    - name: metrics
+      port: 9216
+      targetPort: 9216

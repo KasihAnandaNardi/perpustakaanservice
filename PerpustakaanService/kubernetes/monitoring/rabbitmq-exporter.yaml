@@ -1,0 +1,47 @@
+# kubernetes/rabbitmq-exporter.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-exporter-deployment
+  namespace: monitoring-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-exporter
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-exporter
+    spec:
+      containers:
+        - name: rabbitmq-exporter
+          image: kbudde/rabbitmq-exporter:latest
+          ports:
+            - containerPort: 9419
+          env:
+            # URL menunjuk ke service rabbitmq di namespace perpustakaan-ns
+            - name: RABBIT_URL
+              value: "http://rabbitmq.perpustakaan-ns.svc.cluster.local:15672"
+            # Asumsi menggunakan user/pass default
+            - name: RABBIT_USER
+              value: "guest"
+            - name: RABBIT_PASS
+              value: "guest"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-exporter-service
+  namespace: monitoring-ns
+  # --- ANOTASI UNTUK PROMETHEUS ---
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9419"
+spec:
+  selector:
+    app: rabbitmq-exporter
+  ports:
+    - name: metrics
+      port: 9419
+      targetPort: 9419

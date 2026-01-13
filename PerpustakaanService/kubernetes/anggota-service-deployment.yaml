@@ -1,0 +1,42 @@
+# kubernetes/anggota-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anggota-deployment
+  namespace: perpustakaan-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anggota-service
+  template:
+    metadata:
+      labels:
+        app: anggota-service
+    spec:
+      containers:
+        - name: anggota-container
+          image: nauvalalpenperdana/anggota-service:1.0 # Nama image Docker Anda
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9001 # Port internal aplikasi
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://eureka-server:8761/eureka/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: anggota-service # Service DNS akan bernama 'anggota-service'
+  namespace: perpustakaan-ns
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "9001" # Port yang diekspos oleh service ini
+spec:
+  selector:
+    app: anggota-service
+  ports:
+    - protocol: TCP
+      port: 9001
+      targetPort: 9001

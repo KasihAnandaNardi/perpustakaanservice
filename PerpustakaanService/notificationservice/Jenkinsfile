@@ -1,0 +1,91 @@
+pipeline {
+    agent any
+
+    environment {
+        // --- KONFIGURASI NOTIFICATION SERVICE ---
+        
+        // Nama image yang akan dibangun
+        SERVICE_NAME = 'notification-service'
+        
+        // Lokasi folder source code 
+        DOCKER_DIR = 'PerpustakaanService/notificationservice' 
+        
+        // Nama Deployment di Kubernetes
+        K8S_DEPLOYMENT = 'notification-deployment'
+        
+        // Namespace Kubernetes
+        K8S_NS = 'perpustakaan-ns'
+        
+        // Nama Container di dalam file YAML (Sesuai permintaan Anda)
+        CONTAINER_NAME = 'notification-container'
+        
+        // Tag Image (Tetap 1.0 agar hemat storage & overwrite)
+        IMAGE_TAG = "localhost:5000/${SERVICE_NAME}:1.0"
+    }
+
+    tools {
+        maven 'maven-3'
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                // Setup tools
+                sh '''
+                if ! command -v docker &> /dev/null; then
+                    curl -fsSL https://get.docker.com -o get-docker.sh
+                    sh get-docker.sh
+                fi
+                if ! command -v kubectl &> /dev/null; then
+                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                    chmod +x kubectl
+                    mv kubectl /usr/local/bin/
+                fi
+                '''
+            }
+        }
+
+        stage('Build Maven') {
+            steps {
+                dir("${DOCKER_DIR}") {
+                    // Skip test agar build cepat
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir("${DOCKER_DIR}") {
+                    sh "docker build -t ${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                sh "docker push ${IMAGE_TAG}"
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                // Update image container spesifik
+                sh """
+                kubectl set image deployment/${K8S_DEPLOYMENT} \
+                ${CONTAINER_NAME}=${IMAGE_TAG} \
+                -n ${K8S_NS}
+                """
+                
+                // Restart rollout agar pod baru ditarik
+                sh "kubectl rollout restart deployment/${K8S_DEPLOYMENT} -n ${K8S_NS}"
+            }
+        }
+    }
+        // Bersihkan image sampah
+    post {
+        always {
+            sh 'docker image prune -f'
+        }
+    }
+}

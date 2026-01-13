@@ -1,0 +1,53 @@
+# kubernetes/jenkins/jenkins-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+  namespace: jenkins-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-server
+  template:
+    metadata:
+      labels:
+        app: jenkins-server
+    spec:
+      serviceAccountName: jenkins-admin
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 0 # Jalankan sebagai Root agar bisa akses Docker Socket
+      containers:
+        - name: jenkins
+          image: jenkins/jenkins:lts
+          ports:
+            - containerPort: 8080
+            - containerPort: 50000
+          volumeMounts:
+            - name: jenkins-home
+              mountPath: /var/jenkins_home
+            # Mount Docker Socket dari Host
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+      volumes:
+        - name: jenkins-home
+          persistentVolumeClaim:
+            claimName: jenkins-pvc
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-service
+  namespace: jenkins-ns
+spec:
+  selector:
+    app: jenkins-server
+  type: NodePort # Agar bisa diakses dari Browser
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 32000 # Akses di http://localhost:32000

@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: eureka-server
+server:
+  port: 8761
+eureka:
+  instance:
+    # --- TAMBAHAN PENTING ---
+    # Beritahu Eureka untuk menggunakan hostname 'eureka'.
+    # Ini adalah nama container yang kita definisikan di docker-compose.yml.
+    # Ini membantu dalam resolusi nama di dalam jaringan Docker.
+    hostname: eureka
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+logging:
+  level:
+    com.netflix.eureka: OFF
+    com.netflix.discovery: OFF
+
+# --- Konfigurasi Actuator & Prometheus ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*" # Tanda kutip penting di YAML
+  endpoint:
+    health:
+      show-details: always

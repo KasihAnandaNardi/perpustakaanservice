@@ -1,0 +1,44 @@
+# kubernetes/monitoring/prometheus-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring-ns
+data:
+  # Kunci 'prometheus.yml' akan menjadi nama file di dalam ConfigMap
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+
+    scrape_configs:
+      # Job ini secara dinamis menemukan target untuk di-scrape menggunakan Kubernetes API
+      - job_name: 'kubernetes-services'
+        
+        # Mengaktifkan service discovery Kubernetes untuk resource 'Service'
+        kubernetes_sd_configs:
+          - role: service
+            
+        # 'relabel_configs' adalah bagian paling penting untuk memfilter
+        # dan mengkonfigurasi target yang ditemukan secara otomatis.
+        relabel_configs:
+        # 1. Filter: Hanya simpan (keep) Service yang memiliki anotasi 'prometheus.io/scrape' dengan nilai 'true'.
+        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+          action: keep
+          regex: true
+          
+        # 2. Path: Ambil path metrik dari anotasi 'prometheus.io/path'.
+        #    Jika anotasi ini ada, nilainya akan menggantikan path default ('/metrics').
+        #    Ini berguna untuk aplikasi Spring Boot yang menggunakan '/actuator/prometheus'.
+        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+          action: replace
+          target_label: __metrics_path__
+          regex: (.+)
+          
+        # 3. Alamat & Port: Bentuk ulang alamat target.
+        #    Ambil nama service dan port dari anotasi 'prometheus.io/port' untuk membuat
+        #    alamat scrape yang valid (contoh: 'peminjamanqueryservice:9007').
+        - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+          action: replace
+          regex: ([^:]+)(?::\d+)?;(\d+)
+          replacement: $1:$2
+          target_label: __address__

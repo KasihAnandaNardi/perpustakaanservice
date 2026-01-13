@@ -1,0 +1,90 @@
+# kubernetes/logging/logstash.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-config
+  namespace: logging-ns
+data:
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+    }
+    filter {
+      # Jika log berasal dari container docker, biasanya formatnya JSON
+      if [message] =~ /^\{.*\}$/ {
+        json {
+          source => "message"
+          # Hapus field message asli biar hemat storage, 
+          # karena isinya sudah dipecah ke field baru
+          # remove_field => ["message"] 
+        }
+      }
+    }
+    output {
+      elasticsearch {
+        hosts => ["http://elasticsearch:9200"]
+        index => "microservices-log-%{+YYYY.MM.dd}"
+        ecs_compatibility => disabled
+      }
+      # Debugging output agar terlihat di logs
+      stdout { codec => rubydebug }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+  namespace: logging-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+        - name: logstash
+          image: docker.elastic.co/logstash/logstash:7.17.10
+          ports:
+            - containerPort: 5044
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/logstash/pipeline/
+          env:
+            # --- PERBAIKAN: Naikkan memory minimal ke 512m ---
+            - name: LS_JAVA_OPTS
+              value: "-Xmx512m -Xms512m"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          # --- TAMBAHAN: Cek apakah port 5044 sudah kebuka ---
+          readinessProbe:
+            tcpSocket:
+              port: 5044
+            initialDelaySeconds: 20
+            periodSeconds: 10
+      volumes:
+        - name: config-volume
+          configMap:
+            name: logstash-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash
+  namespace: logging-ns
+spec:
+  selector:
+    app: logstash
+  ports:
+    - port: 5044
+      targetPort: 5044

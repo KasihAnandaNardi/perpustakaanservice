@@ -1,0 +1,40 @@
+# kubernetes/api-gateway-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway-deployment
+  namespace: perpustakaan-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway-container
+          image: nauvalalpenperdana/api-perpustakaan-service:1.0 # Nama image gateway Anda
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080 # Port internal gateway
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://eureka-server:8761/eureka/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway-service
+  namespace: perpustakaan-ns
+spec:
+  selector:
+    app: api-gateway
+  type: NodePort # <-- PENTING: Untuk mengekspos service ke luar cluster
+  ports:
+    - protocol: TCP
+      port: 8080 # Port internal service
+      targetPort: 8080 # Port container
+      # nodePort: 30001 # Kubernetes akan memilih port acak jika ini tidak dispesifikasikan

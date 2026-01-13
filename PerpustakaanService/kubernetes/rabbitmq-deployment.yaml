@@ -1,0 +1,40 @@
+# kubernetes/rabbitmq-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-deployment
+  namespace: perpustakaan-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3-management-alpine # Image resmi dari Docker Hub
+          ports:
+            - containerPort: 5672 # Port AMQP
+            - containerPort: 15672 # Port Management UI
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq # Service DNS akan bernama 'rabbitmq'
+  namespace: perpustakaan-ns
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+    - name: amqp
+      protocol: TCP
+      port: 5672
+      targetPort: 5672
+    - name: http
+      protocol: TCP
+      port: 15672
+      targetPort: 15672

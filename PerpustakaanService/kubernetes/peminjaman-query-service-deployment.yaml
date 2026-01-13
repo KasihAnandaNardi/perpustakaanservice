@@ -1,0 +1,65 @@
+# kubernetes/peminjaman-query-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: peminjaman-query-deployment
+  namespace: perpustakaan-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: peminjaman-query
+  template:
+    metadata:
+      labels:
+        app: peminjaman-query
+    spec:
+      containers:
+        - name: peminjaman-query-container
+          image: nauvalalpenperdana/peminjamanquery-service:1.1 # Nama image Docker Anda
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9007 # Port internal aplikasi
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://eureka-server:8761/eureka/"
+            - name: SPRING_RABBITMQ_HOST
+              value: "rabbitmq"
+            # URI Koneksi MongoDB. Mengambil username & password dari Secret.
+            # --- PERBAIKAN DI SINI ---
+            # Definisikan properti satu per satu. Hapus SPRING_DATA_MONGODB_URI.
+            - name: SPRING_DATA_MONGODB_HOST
+              value: "mongodb"
+            - name: SPRING_DATA_MONGODB_PORT
+              value: "27017"
+            - name: SPRING_DATA_MONGODB_DATABASE
+              value: "perpustakaan_read_db"
+            - name: SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE
+              value: "admin"
+            - name: SPRING_DATA_MONGODB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: mongo-root-username
+            - name: SPRING_DATA_MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: mongo-root-password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: peminjamanqueryservice # Service DNS akan bernama 'peminjamanqueryservice'
+  namespace: perpustakaan-ns
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "9007" # Port yang diekspos oleh service ini
+spec:
+  selector:
+    app: peminjaman-query
+  ports:
+    - protocol: TCP
+      port: 9007
+      targetPort: 9007

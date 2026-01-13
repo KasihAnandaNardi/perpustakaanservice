@@ -1,0 +1,42 @@
+# kubernetes/buku-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buku-deployment
+  namespace: perpustakaan-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: buku-service
+  template:
+    metadata:
+      labels:
+        app: buku-service
+    spec:
+      containers:
+        - name: buku-container
+          image: nauvalalpenperdana/buku-service:1.0 # Nama image Docker Anda
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9002 # Port internal aplikasi
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://eureka-server:8761/eureka/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: buku-service # Service DNS akan bernama 'buku-service'
+  namespace: perpustakaan-ns
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "9002" # Port yang diekspos oleh service ini
+spec:
+  selector:
+    app: buku-service
+  ports:
+    - protocol: TCP
+      port: 9002
+      targetPort: 9002

@@ -1,0 +1,42 @@
+# kubernetes/pengembalian-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pengembalian-deployment
+  namespace: perpustakaan-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pengembalian-service
+  template:
+    metadata:
+      labels:
+        app: pengembalian-service
+    spec:
+      containers:
+        - name: pengembalian-container
+          image: nauvalalpenperdana/pengembalian-service:1.0 # Nama image Docker Anda
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9004 # Port internal aplikasi
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://eureka-server:8761/eureka/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pengembalian-service # Service DNS akan bernama 'pengembalian-service'
+  namespace: perpustakaan-ns
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "9004" # Port yang diekspos oleh service ini
+spec:
+  selector:
+    app: pengembalian-service
+  ports:
+    - protocol: TCP
+      port: 9004
+      targetPort: 9004

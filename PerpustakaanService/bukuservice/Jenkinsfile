@@ -1,0 +1,86 @@
+pipeline {
+    agent any
+
+    // Definisikan Variabel Unik per Service di sini
+    environment {
+        // Ganti sesuai nama service
+        SERVICE_NAME = 'bukuservice' 
+        // Ganti sesuai path Dockerfile relatif dari root repo git
+        DOCKER_DIR = 'PerpustakaanService/bukuservice' 
+        // Nama Deployment di Kubernetes
+        K8S_DEPLOYMENT = 'buku-deployment'
+        // Namespace Kubernetes
+        K8S_NS = 'perpustakaan-ns'
+        // Registry Image
+        IMAGE_TAG = "localhost:5000/${SERVICE_NAME}:1.0"
+    }
+
+    tools {
+        // Panggil Maven yang tadi kita setting di Global Tools
+        maven 'maven-3'
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                // Install Docker CLI & Kubectl di dalam Pod Jenkins (jika belum ada)
+                sh '''
+                if ! command -v docker &> /dev/null; then
+                    curl -fsSL https://get.docker.com -o get-docker.sh
+                    sh get-docker.sh
+                fi
+                if ! command -v kubectl &> /dev/null; then
+                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                    chmod +x kubectl
+                    mv kubectl /usr/local/bin/
+                fi
+                '''
+            }
+        }
+
+        stage('Build Maven') {
+            steps {
+                dir("${DOCKER_DIR}") {
+                    // Build file .jar
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir("${DOCKER_DIR}") {
+                    // Build image menggunakan Docker Socket host
+                    sh "docker build -t ${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                // Push ke Local Registry
+                sh "docker push ${IMAGE_TAG}"
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                // Update image di deployment yang sudah ada
+                sh """
+                kubectl set image deployment/buku-deployment \
+                buku-container=${IMAGE_TAG} \
+                -n ${K8S_NS}
+                """
+                
+                // Restart rollout agar pod baru terambil
+                sh "kubectl rollout restart deployment/${K8S_DEPLOYMENT} -n ${K8S_NS}"
+            }
+        }
+    }
+        // Bersihkan image sampah
+    post {
+        always {
+            sh 'docker image prune -f'
+        }
+    }
+}
