@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: eureka-container
-          image: nauvalalpenperdana/eureka-perpustakaan-service:1.0 # Nama image Docker Anda
+          image: kasih04/eureka-perpustakaan-service:1.0 # Nama image Docker Anda
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8761

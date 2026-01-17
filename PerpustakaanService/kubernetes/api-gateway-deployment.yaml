@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: api-gateway-container
-          image: nauvalalpenperdana/api-perpustakaan-service:1.0 # Nama image gateway Anda
+          image: kasih04/api-perpustakaan-service:1.0 # Nama image gateway Anda
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080 # Port internal gateway

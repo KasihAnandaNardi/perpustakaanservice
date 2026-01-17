@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: anggota-container
-          image: nauvalalpenperdana/anggota-service:1.0 # Nama image Docker Anda
+          image: kasih04/anggota-service:1.0 # Nama image Docker Anda
           imagePullPolicy: Always
           ports:
             - containerPort: 9001 # Port internal aplikasi

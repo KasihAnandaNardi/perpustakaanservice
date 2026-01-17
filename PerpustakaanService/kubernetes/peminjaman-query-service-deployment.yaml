@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: peminjaman-query-container
-          image: nauvalalpenperdana/peminjamanquery-service:1.1 # Nama image Docker Anda
+          image: kasih04/peminjamanquery-service:1.1 # Nama image Docker Anda
           imagePullPolicy: Always
           ports:
             - containerPort: 9007 # Port internal aplikasi

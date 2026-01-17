@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: pengembalian-container
-          image: nauvalalpenperdana/pengembalian-service:1.0 # Nama image Docker Anda
+          image: kasih04/pengembalian-service:1.0 # Nama image Docker Anda
           imagePullPolicy: Always
           ports:
             - containerPort: 9004 # Port internal aplikasi

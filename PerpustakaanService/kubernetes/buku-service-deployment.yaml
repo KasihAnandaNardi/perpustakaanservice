@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: buku-container
-          image: nauvalalpenperdana/buku-service:1.0 # Nama image Docker Anda
+          image: kasih04/buku-service:1.0 # Nama image Docker Anda
           imagePullPolicy: Always
           ports:
             - containerPort: 9002 # Port internal aplikasi

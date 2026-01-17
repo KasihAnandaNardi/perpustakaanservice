@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: peminjaman-command-container
-          image: nauvalalpenperdana/peminjaman-service:1.0 # Nama image Docker Anda
+          image: kasih04/peminjaman-service:1.0 # Nama image Docker Anda
           imagePullPolicy: Always # Penting: Gunakan image lokal jika ada
           ports:
             - containerPort: 9003 # Port internal aplikasi
