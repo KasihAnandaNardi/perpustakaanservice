@@ -35,7 +35,7 @@ metadata:
   namespace: perpustakaan-ns
   annotations:
     prometheus.io/scrape: "true"
-    prometheus.io/path: "/actuator/prometheus"
+    # prometheus.io/path: "/actuator/prometheus"
     prometheus.io/port: "9003" # Port yang diekspos oleh service ini
 spec:
   selector:

@@ -1,3 +1,4 @@
+# langkah 2 : mengambil statistik ke mongodb lalu mengubahnya menjadi format yang di mengerti prometheus
 # kubernetes/monitoring/mongodb-exporter.yaml
 apiVersion: apps/v1
 kind: Deployment

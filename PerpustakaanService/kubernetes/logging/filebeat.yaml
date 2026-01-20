@@ -1,3 +1,4 @@
+# mengumpulkan log lalu kirim ke longtash
 apiVersion: v1
 kind: ConfigMap
 metadata:

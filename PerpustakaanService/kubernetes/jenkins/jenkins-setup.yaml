@@ -1,3 +1,4 @@
+# membuat role akses
 # kubernetes/jenkins/jenkins-setup.yaml
 apiVersion: v1
 kind: Namespace

@@ -1,3 +1,4 @@
+#langkah 7 : membuat deployment dan service untuk grafana
 # kubernetes/grafana-deployment.yaml
 apiVersion: v1
 kind: PersistentVolumeClaim

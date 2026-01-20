@@ -1,3 +1,4 @@
+#langkah 5: konfigurasi prometheus agar bisa mengambil data dari exporter yang sudah dibuat
 # kubernetes/monitoring/prometheus-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -8,7 +9,7 @@ data:
   # Kunci 'prometheus.yml' akan menjadi nama file di dalam ConfigMap
   prometheus.yml: |
     global:
-      scrape_interval: 15s
+      scrape_interval: 15s 
 
     scrape_configs:
       # Job ini secara dinamis menemukan target untuk di-scrape menggunakan Kubernetes API

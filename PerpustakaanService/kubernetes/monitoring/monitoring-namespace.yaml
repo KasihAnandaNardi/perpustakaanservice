@@ -1,3 +1,4 @@
+# namaspace untuk monitoring
 # kubernetes/monitoring-namespace.yaml
 apiVersion: v1
 kind: Namespace

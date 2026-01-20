@@ -27,7 +27,7 @@ spec:
               value: "rabbitmq"
             # Konfigurasi Email
             - name: SPRING_MAIL_USERNAME
-              value: "kasihanandanardi@gmail.com" # Ganti dengan email Anda
+              value: "kasihananda04@gmail.com" # Ganti dengan email Anda
             # Ambil password dari Secret
             - name: SPRING_MAIL_PASSWORD
               valueFrom:

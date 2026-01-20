@@ -1,3 +1,4 @@
+# logstash mengolah log dari filebeat dan menberikannya ke elasticsearch
 # kubernetes/logging/logstash.yaml
 apiVersion: v1
 kind: ConfigMap

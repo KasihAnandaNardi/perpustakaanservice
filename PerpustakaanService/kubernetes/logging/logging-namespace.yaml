@@ -1,3 +1,4 @@
+# membuat area khusus di Kubernetes untuk logging
 apiVersion: v1
 kind: Namespace
 metadata:

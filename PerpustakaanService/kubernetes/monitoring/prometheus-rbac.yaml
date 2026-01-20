@@ -1,3 +1,4 @@
+# langkah 1. Membuat ServiceAccount, ClusterRole, dan ClusterRoleBinding untuk Prometheus
 # kubernetes/monitoring/prometheus-rbac.yaml
 apiVersion: v1
 kind: ServiceAccount
